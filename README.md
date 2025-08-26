@@ -18,4 +18,5 @@ There is an option bar to select on which axis-plane the point will move or will
 add this function to the "convex_point_gizmo.gd" so it don't call for null name,
 
 func _get_gizmo_name():
+
 	return ""
