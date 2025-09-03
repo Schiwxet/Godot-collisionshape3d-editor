@@ -19,3 +19,4 @@ add this function to the "convex_point_gizmo.gd" so it don't call for null name,
 
 	func _get_gizmo_name():
 		return ""
+When the CollisionShape3d node is moved/rotated the mouse cursor is offseted .
