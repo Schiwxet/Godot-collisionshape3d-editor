@@ -25,11 +25,9 @@ func _enter_tree() -> void:
 			pass
 	)
 
-
-
 	# Plane selection menu
 	plane_menu = OptionButton.new()
-	for i in ["Free", "XY", "XZ", "YZ"]:
+	for i in ["Free", "XY", "XZ", "YZ", "COLLISION"]:
 		plane_menu.add_item(i)
 	plane_menu.tooltip_text = "Choose the plane to drag/add point on"
 	plane_menu.selected = gizmo_plugin.plane_mode

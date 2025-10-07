@@ -5,7 +5,7 @@ var undo_redo: EditorUndoRedoManager
 var add_mode := false
 var selected_handle := -1
 
-enum PlaneMode { FREE, XY, XZ, YZ }
+enum PlaneMode { FREE, XY, XZ, YZ, COLLISION }
 var plane_mode := PlaneMode.FREE
 
 
@@ -137,6 +137,19 @@ func _get_point_from_mouse(node: Node3D, camera: Camera3D, mouse_pos: Vector2, p
 		PlaneMode.FREE:
 			var t = (ref - from).dot(dir)/dir.length_squared()
 			point = from + dir * t
+		PlaneMode.COLLISION:
+			var space_state: PhysicsDirectSpaceState3D = camera.get_world_3d().direct_space_state
+			var query: PhysicsRayQueryParameters3D     = PhysicsRayQueryParameters3D.create(from, from + dir * 10000.0)
+			query.collide_with_areas = true
+			query.collide_with_bodies = true
+	
+			var result = space_state.intersect_ray(query)
+			if result.has("position"):
+				point = result["position"]
+			else:
+				printerr("No collision at mouse position")
+				var t = (ref - from).dot(dir)/dir.length_squared()
+				point = from + dir * t
 
 	# Shift snapping
 	if Input.is_key_pressed(KEY_SHIFT):
