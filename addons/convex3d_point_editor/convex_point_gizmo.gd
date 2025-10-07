@@ -74,10 +74,9 @@ func _set_handle(gizmo: EditorNode3DGizmo, id: int, is_selected: bool, camera: C
 	# remember which point is being dragged
 	current_drag_id = id
 
-	var new_pos = _get_point_from_mouse(camera, mouse_pos, plane_mode, pts, id)
-	pts[id] = new_pos
+	var new_pos = _get_point_from_mouse(cs, camera, mouse_pos, plane_mode, pts, id)
+	pts[id] = cs.to_local(new_pos)
 	shape.points = pts
-
 
 #edited handle (save edited handle for undoredo)
 func _commit_handle(gizmo: EditorNode3DGizmo, id: int, is_selected: bool, restore: Variant, cancel: bool) -> void:
@@ -107,30 +106,34 @@ func _commit_handle(gizmo: EditorNode3DGizmo, id: int, is_selected: bool, restor
 
 # --- HELPERS ---
 
-func _get_point_from_mouse(camera: Camera3D, mouse_pos: Vector2, plane: int, pts: PackedVector3Array, id: int=-1) -> Vector3:
-	var from = camera.project_ray_origin(mouse_pos)
-	var dir = camera.project_ray_normal(mouse_pos)
+func _get_point_from_mouse(node: Node3D, camera: Camera3D, mouse_pos: Vector2, plane: int, pts: PackedVector3Array, id: int = -1) -> Vector3:
+	var from  = camera.project_ray_origin(mouse_pos)
+	var dir   = camera.project_ray_normal(mouse_pos)
 	var point = from
 
 	var ref = Vector3.ZERO
 	if id >= 0 and id < pts.size():
-		ref = pts[id]
+		ref = node.to_global(pts[id])
 	elif pts.size() > 0:
-		ref = pts[pts.size() - 1]
+		ref = node.to_global(pts[pts.size() - 1])
 
-	match plane:
+	var current_plane: Plane
+	match plane_mode:
 		PlaneMode.XY:
-			var t = (ref.z - from.z)/dir.z if abs(dir.z) > 0.001 else 0
-			point = from + dir * t
-			point.z = ref.z
+			current_plane = Plane(Vector3(0, 0, 1), ref.z)
+			var hit = current_plane.intersects_ray(from, dir)
+			if hit != null:
+				point = hit
 		PlaneMode.XZ:
-			var t = (ref.y - from.y)/dir.y if abs(dir.y) > 0.001 else 0
-			point = from + dir * t
-			point.y = ref.y
+			current_plane = Plane(Vector3(0, 1, 0), ref.y)
+			var hit = current_plane.intersects_ray(from, dir)
+			if hit != null:
+				point = hit
 		PlaneMode.YZ:
-			var t = (ref.x - from.x)/dir.x if abs(dir.x) > 0.001 else 0
-			point = from + dir * t
-			point.x = ref.x
+			current_plane = Plane(Vector3(1, 0, 0), ref.x)
+			var hit = current_plane.intersects_ray(from, dir)
+			if hit != null:
+				point = hit
 		PlaneMode.FREE:
 			var t = (ref - from).dot(dir)/dir.length_squared()
 			point = from + dir * t
@@ -162,8 +165,9 @@ func _get_handle_under_mouse(node: Node3D, camera: Camera3D, mouse_pos: Vector2)
 	var min_dist = 10.0
 	var closest_id = -1
 	for i in range(shape.points.size()):
-		var screen_pos = camera.unproject_position(shape.points[i])
-		var dist = screen_pos.distance_to(mouse_pos)
+		var world_point = node.to_global(shape.points[i])
+		var screen_pos  = camera.unproject_position(world_point)
+		var dist        = screen_pos.distance_to(mouse_pos)
 		if dist < min_dist:
 			min_dist = dist
 			closest_id = i
