@@ -103,8 +103,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	# -------- Keyboard 'B' to add point --------
 	if gizmo_plugin.add_mode and event is InputEventKey and event.pressed and event.keycode == KEY_B:
-		var hit = gizmo_plugin._get_point_from_mouse(camera, mouse_pos, gizmo_plugin.plane_mode, pts)
+		var hit = gizmo_plugin._get_point_from_mouse(node, camera, mouse_pos, gizmo_plugin.plane_mode, pts)
 		if hit:
+			hit = node.to_local(hit)
 			_add_point_undo(shape, pts, hit, node)
 		return
 
