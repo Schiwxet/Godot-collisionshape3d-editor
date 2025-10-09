@@ -16,6 +16,8 @@ var current_drag_id: int = -1
 func _has_gizmo(node: Node3D) -> bool:
 	return node is CollisionShape3D and node.shape is ConvexPolygonShape3D
 
+func _get_gizmo_name():
+	return ""
 
 func _create_gizmo(node: Node3D) -> EditorNode3DGizmo:
 	return EditorNode3DGizmo.new()
